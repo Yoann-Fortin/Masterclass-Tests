@@ -1,48 +1,41 @@
 import { describe, it, expect, vi } from "vitest";
-import { createMemoryRouter, RouterProvider, redirect } from "react-router-dom";
-import { render, screen, waitFor } from "@testing-library/react";
+import { redirect } from "react-router-dom";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import renderComponent from "../utils";
+
 import Login from "../../src/pages/Login";
-import Home from "../../src/pages/Home";
+
+const INITIAL_ROUTE = "/login";
+const LABEL_EMAIL = "Email";
+const LABEL_PASSWORD = "Mot de passe";
+const LABEL_BUTTON = "Se connecter";
+const USER_EMAIL = "toto.tata@titi.com";
+const USER_PASSWORD = "password";
+const HOME_TITLE = "Bienvenue à cette Masterclass sur les tests";
 
 describe("Login integration test", () => {
 	it("should redirect to the home page on successful login", async () => {
 		const login = vi.fn(() => redirect("/"));
 
-		const router = createMemoryRouter(
-			[
-				{
-					path: "/",
-					element: <Home />,
-				},
-				{
-					path: "/connect",
-					element: <Login />,
-					action: login,
-				},
-			],
-			{
-				initialEntries: ["/connect"],
-			},
+		await renderComponent(Login, { route: INITIAL_ROUTE, action: login });
+
+		const email = screen.getByLabelText(new RegExp(LABEL_EMAIL, "i"));
+		const password = screen.getByLabelText(new RegExp(LABEL_PASSWORD, "i"));
+		const submitButton = screen.getByRole(
+			"button",
+			new RegExp(LABEL_BUTTON, "i"),
 		);
 
-		render(<RouterProvider router={router} />);
-
-		const pseudo = screen.getByLabelText(/Pseudo/i);
-		const password = screen.getByLabelText(/Mot de passe/i);
-		const submitButton = screen.getByRole("button", {
-			name: /Se connecter/i,
-		});
-		await userEvent.type(pseudo, "toto");
-		await userEvent.type(password, "password");
+		await userEvent.type(email, USER_EMAIL);
+		await userEvent.type(password, USER_PASSWORD);
 		await userEvent.click(submitButton);
+
 		await waitFor(() => {
 			expect(login).toHaveBeenCalled();
-			
-			const title = screen.getByText(
-				/Bienvenue à cette Masterclass sur les tests/i,
-			);
+
+			const title = screen.getByText(new RegExp(HOME_TITLE, "i"));
 			expect(title).toBeInTheDocument();
 		});
 	});
