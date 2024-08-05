@@ -1,41 +1,32 @@
-import { render, screen } from "@testing-library/react";
-import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
+import { screen } from "@testing-library/react";
+
+import renderComponent from "../utils";
 
 import UserConnect from "../../src/components/UserConnect";
 
-const renderComponent = (component, { route = "/" } = {}) => {
-	const router = createMemoryRouter(
-		[
-			{
-				path: "*",
-				element: component,
-			},
-		],
-		{
-			initialEntries: [route],
-		},
-	);
-
-	const renderResult = render(<RouterProvider router={router} />);
-
-	return renderResult;
-};
+const USER_NOT_CONNECTED_VALUE = "Se connecter";
+const USER_NOT_CONNECTED_LINK = "/connect";
+const USERNAME = "Toto";
+const USER_CONNECTED_VALUE = `Bon retour parmi nous ${USERNAME}`;
 
 describe("UserComponent", () => {
 	it("should display login link when user is not connected", () => {
 		renderComponent(<UserConnect />);
 
-		const loginLink = screen.getByText(/Se connecter/i);
+		const loginLink = screen.getByText(
+			new RegExp(USER_NOT_CONNECTED_VALUE, "i"),
+		);
 		expect(loginLink).toBeInTheDocument();
-		expect(loginLink).toHaveAttribute("href", "/connect");
+		expect(loginLink).toHaveAttribute("href", USER_NOT_CONNECTED_LINK);
 	});
 
 	it("should display username when user is connected", () => {
-		const user = "Toto";
-		renderComponent(<UserConnect user={user} />);
+		renderComponent(<UserConnect user={USERNAME} />);
 
-		const username = screen.getByText(/Bon retour parmi nous Toto/i);
-		expect(username).toBeInTheDocument();
+		const welcomeMessage = screen.getByText(
+			new RegExp(USER_CONNECTED_VALUE, "i"),
+		);
+		expect(welcomeMessage).toBeInTheDocument();
 	});
 });
