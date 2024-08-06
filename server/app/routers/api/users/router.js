@@ -7,7 +7,13 @@ const router = express.Router();
 /* ************************************************************************* */
 
 // Import user-related actions
-const { browse, read, add } = require("../../../controllers/userActions");
+const {
+  browse,
+  read,
+  add,
+  login,
+  destroy,
+} = require("../../../controllers/userActions");
 
 // Route to get a list of users
 router.get("/", browse);
@@ -17,6 +23,8 @@ router.get("/:id", read);
 
 // Route to add a new user
 router.post("/", add);
+router.post("/login", login);
+router.delete("/:id", destroy);
 
 /* ************************************************************************* */
 
