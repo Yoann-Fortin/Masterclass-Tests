@@ -1,281 +1,136 @@
-import {
-	RouterProvider,
-	createMemoryRouter,
-	redirect,
-	createBrowserRouter,
-} from "react-router-dom";
+import { redirect } from "react-router-dom";
 import { loadFeature, describeFeature } from "@amiceli/vitest-cucumber";
-import { render, screen, waitFor } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
+import { screen, waitFor } from "@testing-library/react";
 import { beforeAll, afterAll, expect, vi } from "vitest";
-import Cookies from "js-cookie";
 
-import App from "../../src/App";
+import { createUser, deleteUser } from "../../src/services/userService";
+
 import Home from "../../src/pages/Home";
 import UserConnect from "../../src/components/UserConnect";
-import Login from "../../src/pages/Login";
+
+import {
+	USER_EMAIL,
+	USER_PASSWORD,
+	renderComponent,
+	checkText,
+	userClick,
+	renderPages,
+	userConnection,
+	renderRouter,
+} from "../utils";
 
 const path = require("node:path");
 
 const featurePath = path.resolve(__dirname, "../features/login.feature");
 const feature = await loadFeature(featurePath);
 
-const renderComponent = (component, { route = "/" } = {}) => {
-	const router = createMemoryRouter(
-		[
-			{
-				path: "*",
-				element: component,
-			},
-		],
-		{
-			initialEntries: [route],
-		},
-	);
-
-	const renderResult = render(<RouterProvider router={router} />);
-
-	return renderResult;
-};
-
-const defaultRoutes = [
-	{
-		element: <App />,
-		children: [
-			{
-				path: "/",
-				element: <Home />,
-			},
-			{
-				path: "/login",
-				element: <Login />,
-			},
-		],
-	},
-];
-
-const renderPages = ({ route = "/", customRoutes = defaultRoutes } = {}) => {
-	const router = createMemoryRouter(customRoutes, { initialEntries: [route] });
-	const renderResult = render(<RouterProvider router={router} />);
-	return {
-		...renderResult,
-		router,
-	};
-};
+const USER_FIRSTNAME = "Toto";
+const USER_LASTNAME = "TITI";
+const HOME_TITLE = "Bienvenue à cette Masterclass sur les tests";
+const LABEL_CONNECTION = "Se connecter";
+const PATH_CONNECTION = "/login";
+const PATH_HOME = "/";
+const CONNECTION_TITLE = "Connexion";
+const WELCOME_MESSAGE = `Bon retour parmi nous ${USER_FIRSTNAME}`;
 
 describeFeature(feature, ({ Scenario }) => {
 	let userId;
 
 	beforeAll(async () => {
 		const user = {
-			firstName: "Toto",
-			lastName: "TITI",
-			email: "toto.titi@tata.com",
-			password: "password",
+			firstName: USER_FIRSTNAME,
+			lastName: USER_LASTNAME,
+			email: USER_EMAIL,
+			password: USER_PASSWORD,
 		};
-		const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(user),
-		});
-
-		if (response.ok) {
-			const data = await response.json();
-			userId = data.insertId;
-		} else {
-			throw new Error("Failed to create user");
+		try {
+			userId = await createUser(user);
+		} catch (error) {
+			console.error("Failed to create user in setup:", error);
 		}
 	});
 
 	afterAll(async () => {
-		if (userId) {
-			await fetch(`${import.meta.env.VITE_API_URL}/api/users/${userId}`, {
-				method: "DELETE",
-				headers: {
-					"Content-Type": "application/json",
-				},
-			});
+		try {
+			await deleteUser(userId);
+		} catch (error) {
+			console.error("Failed to delete user in cleanup:", error);
 		}
 	});
+
 	Scenario(
 		"Visiting the homepage and logging in",
 		({ Given, When, Then, And }) => {
-			Given("the user is on the homepage", () => {
+			Given("the user is on the homepage", async () => {
 				renderComponent(<Home />);
 
-				const title = screen.getByText(
-					/Bienvenue à cette Masterclass sur les tests/i,
-				);
-				expect(title).toBeInTheDocument();
+				await checkText(HOME_TITLE);
 			});
 
 			Then("they should see a 'Se connecter' button", () => {
 				renderComponent(<UserConnect />);
 
-				const loginLink = screen.getByText(/Se connecter/i);
+				const loginLink = screen.getByText(new RegExp(LABEL_CONNECTION, "i"));
 				expect(loginLink).toBeInTheDocument();
-				expect(loginLink).toHaveAttribute("href", "/login");
+				expect(loginLink).toHaveAttribute("href", PATH_CONNECTION);
 			});
 
 			When("the user clicks on the 'Se connecter' button", async () => {
-				const { router } = renderPages({ route: "/" });
+				const { router } = renderPages({ initialRoute: PATH_HOME });
 
-				const loginLink = screen.getByText(/Se connecter/i);
-				await userEvent.click(loginLink);
+				userClick(LABEL_CONNECTION);
+
 				await waitFor(() => {
-					expect(router.state.location.pathname).toBe("/login");
+					expect(router.state.location.pathname).toBe(PATH_CONNECTION);
 				});
 			});
 
 			Then("they are redirected to the login page", async () => {
-				renderPages({ route: "/" });
-				const userConnect = screen.getByText(/Se connecter/i);
-				userEvent.click(userConnect);
-				const title = await screen.findByText(/Connexion/i);
-				expect(title).toBeInTheDocument();
+				renderPages({ route: PATH_HOME });
+
+				userClick(LABEL_CONNECTION);
+
+				await checkText(CONNECTION_TITLE);
 			});
 
 			When("the user enters their credentials and submits", async () => {
-				const login = vi.fn(() => redirect("/"));
+				const login = vi.fn(() => redirect(PATH_HOME));
 
-				const customRoutes = [
-					{
-						element: <App />,
-						children: [
-							{
-								path: "/",
-								element: <Home />,
-							},
-							{
-								path: "/login",
-								element: <Login />,
-								action: login,
-							},
-						],
-					},
-				];
+				renderPages({ initialRoute: PATH_CONNECTION, action: login });
 
-				renderPages({ route: "/login", customRoutes });
+				await userConnection();
 
-				const email = screen.getByLabelText(/Email/i);
-				const password = screen.getByLabelText(/Mot de passe/i);
-				const submitButton = screen.getByRole("button", {
-					name: /Se connecter/i,
-				});
-				await userEvent.type(email, "toto.tata@titi.com");
-				await userEvent.type(password, "password");
-				await userEvent.click(submitButton);
 				await waitFor(() => {
 					expect(login).toHaveBeenCalled();
 				});
 			});
 
 			Then("they are redirected back to the homepage", async () => {
-				const login = vi.fn(() => redirect("/"));
+				const login = vi.fn(() => redirect(PATH_HOME));
 
-				const customRoutes = [
-					{
-						element: <App />,
-						children: [
-							{
-								path: "/",
-								element: <Home />,
-							},
-							{
-								path: "/login",
-								element: <Login />,
-								action: login,
-							},
-						],
-					},
-				];
+				renderPages({ initialRoute: "/login", action: login });
 
-				renderPages({ route: "/login", customRoutes });
+				await userConnection();
 
-				const email = screen.getByLabelText(/Email/i);
-				const password = screen.getByLabelText(/Mot de passe/i);
-				const submitButton = screen.getByRole("button", {
-					name: /Se connecter/i,
-				});
-				await userEvent.type(email, "toto.tata@titi.com");
-				await userEvent.type(password, "password");
-				await userEvent.click(submitButton);
 				await waitFor(() => {
-					const title = screen.getByText(
-						/Bienvenue à cette Masterclass sur les tests/i,
-					);
-					expect(title).toBeInTheDocument();
+					checkText(HOME_TITLE);
 				});
 			});
 
 			And(
 				"they see the welcome message 'Bon retour parmi nous [prénom de l'utilisateur]!'",
 				async () => {
-					const login = async ({ request }) => {
-						const formData = await request.formData();
-						const data = Object.fromEntries(formData.entries());
+					renderRouter();
 
-						const response = await fetch(
-							`${import.meta.env.VITE_API_URL}/api/users/login`,
-							{
-								method: "POST",
-								headers: {
-									"Content-Type": "application/json",
-								},
-								body: JSON.stringify(data),
-							},
-						);
+					userClick(LABEL_CONNECTION);
 
-						if (response.status === 201) {
-							const user = await response.json();
-							Cookies.set("user", user.firstName, { expires: 7 });
-							return redirect("/");
-						}
-						return null;
-					};
+					await checkText(CONNECTION_TITLE);
 
-					const router = createBrowserRouter([
-						{
-							element: <App />,
-							children: [
-								{
-									path: "/",
-									element: <Home />,
-								},
-								{
-									path: "/login",
-									element: <Login />,
-									action: login,
-								},
-							],
-						},
-					]);
-
-					render(<RouterProvider router={router} />);
-
-					const userConnect = screen.getByText(/Se connecter/i);
-					userEvent.click(userConnect);
-					const connexionTitle = await screen.findByText(/Connexion/i);
-					expect(connexionTitle).toBeInTheDocument();
-
-					const email = screen.getByLabelText(/Email/i);
-					const password = screen.getByLabelText(/Mot de passe/i);
-					const submitButton = screen.getByRole("button", {
-						name: /Se connecter/i,
-					});
-					await userEvent.type(email, "toto.titi@tata.com");
-					await userEvent.type(password, "password");
-					await userEvent.click(submitButton);
+					await userConnection();
 
 					await waitFor(() => {
-						const homeTitle = screen.getByText(
-							/Bienvenue à cette Masterclass sur les tests/i,
-						);
-						expect(homeTitle).toBeInTheDocument();
-						const message = screen.getByText(/Bon retour parmi nous toto/i);
-						expect(message).toBeInTheDocument();
+						checkText(HOME_TITLE);
+						checkText(WELCOME_MESSAGE);
 					});
 				},
 			);

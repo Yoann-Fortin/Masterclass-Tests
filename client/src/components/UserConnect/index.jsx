@@ -1,12 +1,10 @@
-import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 
+import WelcomeMessage from "./WelcomeMessage";
+import NavItem from "./NavItem";
+
 export default function UserConnect({ user }) {
-	return user ? (
-		<p>Bon retour parmi nous {user}</p>
-	) : (
-		<Link to="/login"> Se connecter</Link>
-	);
+	return user ? <WelcomeMessage user={user} /> : <NavItem />;
 }
 
 UserConnect.propTypes = {
