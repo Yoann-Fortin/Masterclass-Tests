@@ -30,7 +30,7 @@ describe("UserRepository", () => {
     // Fake User data
     const fakeUser = {
       firstName: "toto",
-      lastname: "titi",
+      lastName: "titi",
       email: "toto.titi@tata.com",
       password: "password",
     };
@@ -41,7 +41,7 @@ describe("UserRepository", () => {
     // Assertions
     expect(database.query).toHaveBeenCalledWith(
       "insert into user (firstName, lastName, email, password) values (?, ?, ?, ?)",
-      [fakeUser.firstName, fakeUser.lastname, fakeUser.email, fakeUser.password]
+      [fakeUser.firstName, fakeUser.lastName, fakeUser.email, fakeUser.password]
     );
     expect(returned).toBe(result.insertId);
   });
