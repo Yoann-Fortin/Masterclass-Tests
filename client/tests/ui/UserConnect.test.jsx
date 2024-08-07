@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { screen } from "@testing-library/react";
 
-import renderComponent from "../utils";
+import { renderComponent } from "../utils";
 
 import UserConnect from "../../src/components/UserConnect";
 
 const USER_NOT_CONNECTED_VALUE = "Se connecter";
-const USER_NOT_CONNECTED_LINK = "/connect";
+const USER_NOT_CONNECTED_LINK = "/login";
 const USERNAME = "Toto";
 const USER_CONNECTED_VALUE = `Bon retour parmi nous ${USERNAME}`;
 
