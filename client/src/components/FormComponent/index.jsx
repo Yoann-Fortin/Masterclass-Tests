@@ -1,7 +1,10 @@
 import { Form } from "react-router-dom";
 import PropTypes from "prop-types";
+
 import Input from "./Input";
 import Button from "./Button";
+
+import { LABEL } from "../../../enum";
 
 export default function FormComponent({ method, inputs }) {
 	return (
@@ -15,7 +18,7 @@ export default function FormComponent({ method, inputs }) {
 					isRequired={input.isRequired}
 				/>
 			))}
-			<Button text="Se connecter" />
+			<Button text={LABEL.BUTTON} />
 		</Form>
 	);
 }

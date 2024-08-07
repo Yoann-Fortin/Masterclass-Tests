@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
-import UserConnect from "../../components/UserConnect";
-import TitlePage from "../../components/TitlePage";
+import { UserConnect, TitlePage } from "../../components";
+
+import { TITLE } from "../../../enum";
 
 export default function Home() {
 	const [firstName, setFirstName] = useState("");
@@ -13,7 +14,7 @@ export default function Home() {
 	return (
 		<>
 			<UserConnect user={firstName} />
-			<TitlePage title="Bienvenue à cette Masterclass sur les tests" />
+			<TitlePage title={TITLE.HOME} />
 		</>
 	);
 }

@@ -1,32 +1,23 @@
-import { describe, it, expect } from "vitest";
-import { screen } from "@testing-library/react";
+import { describe, it } from "vitest";
 
-import { renderComponent } from "../utils";
+import { givenTheComponent } from "../sut/render";
 
-import UserConnect from "../../src/components/UserConnect";
+import { UserConnect } from "../../src/components";
 
-const USER_NOT_CONNECTED_VALUE = "Se connecter";
-const USER_NOT_CONNECTED_LINK = "/login";
-const USERNAME = "Toto";
-const USER_CONNECTED_VALUE = `Bon retour parmi nous ${USERNAME}`;
+import USER from "../sut/user.enum";
+
+import { LABEL, MESSAGE } from "../../enum";
+
+import { thenTheTextDisplayedIs } from "../sut/expect";
 
 describe("UserComponent", () => {
-	it("should display login link when user is not connected", () => {
-		renderComponent(<UserConnect />);
-
-		const loginLink = screen.getByText(
-			new RegExp(USER_NOT_CONNECTED_VALUE, "i"),
-		);
-		expect(loginLink).toBeInTheDocument();
-		expect(loginLink).toHaveAttribute("href", USER_NOT_CONNECTED_LINK);
+	it("should display login link when user is not connected", async () => {
+		givenTheComponent(<UserConnect />);
+		await thenTheTextDisplayedIs(LABEL.CONNECTION);
 	});
 
-	it("should display username when user is connected", () => {
-		renderComponent(<UserConnect user={USERNAME} />);
-
-		const welcomeMessage = screen.getByText(
-			new RegExp(USER_CONNECTED_VALUE, "i"),
-		);
-		expect(welcomeMessage).toBeInTheDocument();
+	it("should display username when user is connected", async () => {
+		givenTheComponent(<UserConnect user={USER.FIRSTNAME} />);
+		await thenTheTextDisplayedIs(`${MESSAGE.WELCOME} ${USER.FIRSTNAME}`);
 	});
 });

@@ -5,7 +5,10 @@
 		"dev": "vite --host",
 		"build": "vite build",
 		"preview": "vite preview",
-		"test": "vitest"
+		"test:unit": "vitest tests/ui/",
+		"test:inte": "vitest tests/integrations/",
+		"test:e2e": "vitest tests/e2e/",
+		"test:ap": "vitest tests/acceptance/"
 	},
 	"dependencies": {
 		"js-cookie": "^3.0.5",

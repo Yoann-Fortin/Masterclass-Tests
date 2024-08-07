@@ -1,16 +1,17 @@
-import TitlePage from "../../components/TitlePage";
-import FormComponent from "../../components/FormComponent";
+import { LABEL, TITLE } from "../../../enum";
+
+import { TitlePage, FormComponent } from "../../components";
 
 export default function Login() {
 	const inputs = [
 		{
-			label: "Email",
+			label: LABEL.EMAIL,
 			id: "email",
 			type: "email",
 			isRequired: true,
 		},
 		{
-			label: "Mot de passe",
+			label: LABEL.PASSWORD,
 			id: "password",
 			type: "password",
 			isRequired: true,
@@ -18,7 +19,7 @@ export default function Login() {
 	];
 	return (
 		<>
-			<TitlePage title="Connexion" />
+			<TitlePage title={TITLE.CONNECTION} />
 			<FormComponent method="post" inputs={inputs} />
 		</>
 	);

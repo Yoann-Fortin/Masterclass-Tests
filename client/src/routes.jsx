@@ -1,19 +1,21 @@
 import App from "./App";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
 
-import login from "./services/authService";
+import { PATH } from "../enum";
+
+import { Home, Login } from "./pages";
+
+import { login } from "./services";
 
 const routes = [
 	{
 		element: <App />,
 		children: [
 			{
-				path: "/",
+				path: PATH.HOME,
 				element: <Home />,
 			},
 			{
-				path: "/login",
+				path: PATH.LOGIN,
 				element: <Login />,
 				action: ({ request }) => login(request),
 			},

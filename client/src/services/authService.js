@@ -3,6 +3,8 @@ import { redirect } from "react-router-dom";
 
 import fetchData from "./fetchService";
 
+import { PATH } from "../../enum";
+
 export default async function login(request) {
 	const formData = await request.formData();
 	const userData = Object.fromEntries(formData.entries());
@@ -15,7 +17,7 @@ export default async function login(request) {
 		const user = await fetchData("/api/users/login", options);
 		if (user) {
 			Cookies.set("user", user.firstName, { expires: 7 });
-			return redirect("/");
+			return redirect(PATH.HOME);
 		}
 	} catch (error) {
 		console.error("Login failed", error);
